@@ -1,0 +1,133 @@
+#define BLYNK_TEMPLATE_ID "entre your template id"
+#define BLYNK_TEMPLATE_NAME "ASSISTIVE GLOVE"
+#define BLYNK_AUTH_TOKEN "entre your token "
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+#include <DHT.h>
+#include <PulseSensorPlayground.h>
+
+// --- WiFi Credentials ---
+char ssid[] = "hi";
+char pass[] = "xxxxxxxxx";
+
+// --- Pin Definitions ---
+#define DHTPIN 13
+#define DHTTYPE DHT11
+#define PULSE_PIN 26
+#define BUZZER_PIN 14
+#define THUMB_PIN 34
+#define INDEX_PIN 35
+#define MIDDLE_PIN 32
+#define RING_PIN 33
+#define PINKY_PIN 25
+
+// --- Blynk Virtual Pins ---
+#define VPIN_TEMP V0
+#define VPIN_HUMID V1
+#define VPIN_PULSE V2
+#define VPIN_BUZZER_SWITCH V3
+#define VPIN_THUMB V4
+#define VPIN_INDEX V5
+#define VPIN_MIDDLE V6
+#define VPIN_RING V7
+#define VPIN_PINKY V8
+#define VPIN_MESSAGE V9
+
+// --- Sensor Objects ---
+DHT dht(DHTPIN, DHTTYPE);
+PulseSensorPlayground pulseSensor;
+
+// --- Variables ---
+int buzzerState = 0; // Controlled from Blynk
+String lastMessage = "";
+int highPulseLimit = 120; // bpm threshold
+
+void setup() {
+  Serial.begin(115200);
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  dht.begin();
+
+  // Initialize Pulse Sensor
+  pulseSensor.analogInput(PULSE_PIN);
+  pulseSensor.begin();
+
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW); // buzzer off by default
+}
+
+BLYNK_WRITE(VPIN_BUZZER_SWITCH) {
+  buzzerState = param.asInt(); // 1 = ON, 0 = OFF
+}
+
+void loop() {
+  Blynk.run();
+
+  // --- Flex Sensor Reading ---
+  checkFlexGesture();
+
+  // --- Temperature & Humidity ---
+  float h = dht.readHumidity();
+  float t = dht.readTemperature(true); // Fahrenheit
+
+  if (!isnan(t) && !isnan(h)) {
+    Blynk.virtualWrite(VPIN_TEMP, t);
+    Blynk.virtualWrite(VPIN_HUMID, h);
+  }
+
+  // --- Pulse Reading ---
+  int BPM = pulseSensor.getBeatsPerMinute();
+  if (pulseSensor.sawStartOfBeat()) {
+    Serial.print("❤️ BPM: ");
+    Serial.println(BPM);
+    Blynk.virtualWrite(VPIN_PULSE, BPM);
+
+    // Warning if pulse > normal
+    if (BPM > highPulseLimit) {
+      Blynk.virtualWrite(VPIN_MESSAGE, "⚠️ High Pulse Detected! Please check the patient.");
+    }
+  }
+
+  // --- Buzzer Control (Continuous ON/OFF) ---
+  if (buzzerState == 1) {
+    digitalWrite(BUZZER_PIN, LOW);  // Switch ON → buzzer ON continuously
+  } else {
+    digitalWrite(BUZZER_PIN, HIGH);   // Switch OFF → buzzer OFF
+  }
+
+  delay(500);
+}
+
+void checkFlexGesture() {
+  int thumbVal = analogRead(THUMB_PIN);
+  int indexVal = analogRead(INDEX_PIN);
+  int middleVal = analogRead(MIDDLE_PIN);
+  int ringVal = analogRead(RING_PIN);
+  int pinkyVal = analogRead(PINKY_PIN);
+
+  String message = "";
+ // --- Combination Gestures ---
+  if (indexVal > 1500 && middleVal > 1500) {
+    message = "🤚 I’m in pain,let them go out I want to take rest";
+  } 
+  else if (thumbVal > 1500 && indexVal > 1500) {
+    message = "👍 I'm OK";
+  } 
+  else if (ringVal > 1500 && pinkyVal > 1500) {
+    message = "🤕 I'm in pain";
+  }
+  // --- Single Finger Gestures ---
+  else if (thumbVal > 1500) message = "✋ Help Needed!";
+  else if (indexVal > 1500) message = "👉 Need Water.";
+  else if (middleVal > 1500) message = "🖐 I need food.";
+  else if (ringVal > 1500) message = "👌 PLZ call the doctor!.";
+  else if (pinkyVal > 1500) message = "🤚 I want to washroom";
+  else message = "";
+
+  if (message != "" && message != lastMessage) {
+    lastMessage = message;
+    Serial.println(message);
+    Blynk.virtualWrite(VPIN_MESSAGE, message);
+  }
+}
