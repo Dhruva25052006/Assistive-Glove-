@@ -1,0 +1,86 @@
+🧤 Assistive Glove System for Healthcare Monitoring and Patient Communication
+Overview
+
+The Assistive Glove System is an IoT-enabled healthcare wearable designed to help patients communicate their needs through simple hand gestures while simultaneously monitoring vital health parameters. The system uses an ESP32 microcontroller, flex sensors, a pulse sensor, a DHT11 temperature and humidity sensor, a buzzer, and the Blynk IoT platform for real-time monitoring and alerts.
+
+This project is particularly useful for elderly patients, physically challenged individuals, and patients with limited speech or mobility, allowing them to convey messages through finger gestures and enabling caregivers to monitor their health remotely.
+
+Features
+🖐 Gesture-Based Communication
+
+Flex sensors attached to the glove detect finger movements and translate them into predefined messages.
+
+Gesture	Message
+Thumb	Help Needed
+Index Finger	Need Water
+Middle Finger	I Need Food
+Ring Finger	Please Call the Doctor
+Pinky Finger	I Want to Use the Washroom
+Thumb + Index	I'm OK
+Ring + Pinky	I'm in Pain
+Index + Middle	I'm in Pain, Let Me Rest
+
+All messages are sent instantly to the Blynk IoT application.
+
+❤️ Health Monitoring
+
+The glove continuously monitors:
+
+Heart Rate (BPM) using Pulse Sensor
+Body Temperature using DHT11
+Humidity Monitoring
+
+Real-time sensor values are displayed on the Blynk dashboard.
+
+🚨 Emergency Alert System
+If heart rate exceeds the predefined threshold (120 BPM), an alert notification is sent through the Blynk application.
+An emergency buzzer can be remotely controlled through the mobile application.
+📱 IoT Connectivity
+
+Using the Blynk IoT platform, caregivers can:
+
+Monitor patient health remotely
+Receive emergency notifications
+View gesture-based messages
+Control the buzzer remotely
+=======>   Hardware Components
+ESP32 Development Board
+5 × Flex Sensors
+Pulse Sensor
+DHT11 Temperature & Humidity Sensor
+Buzzer
+Push Button (Emergency Switch)
+10kΩ Resistors
+Jumper Wires
+Power Supply
+Software & Tools
+Arduino IDE
+ESP32 Board Package
+Blynk IoT Platform
+C/C++
+Embedded Systems Programming
+======>  Working Principle
+Flex sensors detect finger bending.
+ESP32 reads sensor values and identifies gestures.
+Corresponding messages are sent to the Blynk application.
+Pulse sensor continuously measures heart rate.
+DHT11 measures temperature and humidity.
+If abnormal health conditions are detected, alerts are generated.
+Caregivers can remotely activate the buzzer through the Blynk dashboard.
+======>    Applications
+1.Smart Healthcare Systems
+2.Patient Assistance Devices
+3.Elderly Care
+4.Rehabilitation Monitoring
+5.IoT-Based Medical Devices
+6.Assistive Wearable Technology
+=====>   Technologies Used
+ESP32
+Blynk IoT
+Embedded C/C++
+IoT Communication
+Sensor Interfacing
+Healthcare Wearables
+Team Project
+
+Developed as an academic healthcare-focused embedded systems project to improve patient communication and remote health monitoring using IoT technology.
