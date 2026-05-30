@@ -1,0 +1,89 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+#include "DHT.h"
+
+// Define I2C address for LCD
+// Check your specific module for the correct address. Common addresses are 0x27, 0x3F.
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Flex sensor pin definitions
+const int thumbPin = 34;
+const int indexPin = 35;
+const int middlePin = 32;
+const int ringPin = 33;
+const int pinkyPin = 25;
+
+// DHT11 sensor pin and type definitions
+#define DHTPIN 13
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// Threshold for detecting finger movement (adjust as needed)
+// A value around 100-200 is a good starting point.
+const int FLEX_THRESHOLD = 150; 
+
+void setup() {
+  Serial.begin(115200);
+
+  // Initialize LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Glove Init...");
+  
+  // Initialize DHT sensor
+  dht.begin();
+
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  // Read flex sensor values
+  int thumbValue = analogRead(thumbPin);
+  int indexValue = analogRead(indexPin);
+  int middleValue = analogRead(middlePin);
+  int ringValue = analogRead(ringPin);
+  int pinkyValue = analogRead(pinkyPin);
+
+  // Read temperature and humidity from DHT11
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+
+  // Check if any reads failed
+  if (isnan(h) || isnan(t)) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("DHT Read Fail");
+    delay(2000);
+    return;
+  }
+  
+  // Check for finger movement and print message
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  
+  if (thumbValue > FLEX_THRESHOLD) {
+    lcd.print("Thumb moved!");
+  } else if (indexValue > FLEX_THRESHOLD) {
+    lcd.print("Index moved!");
+  } else if (middleValue > FLEX_THRESHOLD) {
+    lcd.print("Middle moved!");
+  } else if (ringValue > FLEX_THRESHOLD) {
+    lcd.print("Ring moved!");
+  } else if (pinkyValue > FLEX_THRESHOLD) {
+    lcd.print("Pinky moved!");
+  } else {
+    // If no fingers are moved, display temp and humidity
+    lcd.print("Temp: ");
+    lcd.print(t);
+    lcd.print((char)223); // degree symbol
+    lcd.print("C");
+    lcd.setCursor(0, 1);
+    lcd.print("Humidity: ");
+    lcd.print(h);
+    lcd.print(" %");
+  }
+
+  delay(500); // Wait for a moment before the next reading
+}
